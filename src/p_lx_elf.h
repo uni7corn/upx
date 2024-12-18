@@ -159,6 +159,7 @@ protected:
     virtual void pack1(OutputFile *, Filter &) override;  // generate executable header
     virtual void asl_pack2_Shdrs(OutputFile *, unsigned pre_xct_top);  // AndroidSharedLibrary processes Shdrs
     virtual void asl_slide_Shdrs();  // by so_slide if above xct_off
+    virtual unsigned slide_sh_offset(Elf32_Shdr *shdr);
     virtual int  pack2(OutputFile *, Filter &) override;  // append compressed data
     virtual int  pack2_shlib(OutputFile *fo, Filter &ft, unsigned pre_xct_top);
     virtual off_t pack3(OutputFile *, Filter &) override;  // append loader

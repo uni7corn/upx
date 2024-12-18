@@ -397,7 +397,7 @@ off_t PackLinuxElf::pack3(OutputFile *fo, Filter &ft) // return length of output
     }
 
     set_te32(&disp, sz_elf_hdrs + usizeof(p_info) + usizeof(l_info) +
-        (!!xct_off & !!opt->o_unix.android_shlib));  // |1 iff android shlib
+        (!!xct_off & !!is_asl));  // |1 iff android shlib
     fo->write(&disp, sizeof(disp));  // offset(b_info)
         // FIXME: If is_shlib then that is useful only for the is_asl bit.
         // Better info is the word below with (overlay_offset - sizeof(linfo)).
@@ -419,7 +419,7 @@ off_t PackLinuxElf::pack3(OutputFile *fo, Filter &ft) // return length of output
         fo->write(&disp, sizeof(disp));  // offset(lowest_executable_instr)
         len += sizeof(disp);
 
-        if (opt->o_unix.android_shlib) {
+        if (is_asl) {
             xct_off += asl_delta;  // the extra page
         }
         set_te32(&disp, overlay_offset - sizeof(linfo));
@@ -479,6 +479,23 @@ PackLinuxElf64::elf_find_Phdr_for_va(upx_uint64_t addr, Elf64_Phdr const *phdr, 
     return nullptr;
 }
 
+unsigned
+PackLinuxElf32::slide_sh_offset(Elf32_Shdr *shdr)
+{
+    unsigned offset = get_te32(&shdr->sh_offset);
+    if (Elf32_Shdr::SHF_WRITE & get_te32(&shdr->sh_flags)
+      || (offset && !get_te32(&shdr->sh_addr)))
+    {
+        unsigned newoff = so_slide + offset;
+        if ((unsigned)this->file_size < newoff) {
+            throwInternalError("bad slide %p %#x", shdr, (unsigned)so_slide);
+        }
+        set_te32(&shdr->sh_offset, newoff);
+        return newoff;
+    }
+    return offset;
+}
+
 void
 PackLinuxElf32::asl_slide_Shdrs()
 {
@@ -486,7 +503,7 @@ PackLinuxElf32::asl_slide_Shdrs()
     for (unsigned j = 0; j < e_shnum; ++shdr, ++j) {
         unsigned sh_offset = get_te32(&shdr->sh_offset);
         if (xct_off < sh_offset) {
-            set_te32(&shdr->sh_offset, so_slide + sh_offset);
+            slide_sh_offset(shdr);
         }
     }
 }
@@ -680,7 +697,7 @@ off_t PackLinuxElf32::pack3(OutputFile *fo, Filter &ft)
                     // So don't do it unless appending plain text of shstrtab.
                     unsigned sh_off = get_te32(&shdr->sh_offset);
                     if (xct_off < sh_off) {
-                        set_te32(&shdr->sh_offset, sh_off + so_slide);
+                        slide_sh_offset(shdr);
                     }
                 }
             }
@@ -925,7 +942,7 @@ PackLinuxElf::addStubEntrySections(Filter const *, unsigned m_decompr)
     }
     addLoader("+40,ELFMAINZ", nullptr);
     if (hasLoaderSection("ANDMAJNZ")) { // Android trouble with args to DT_INIT
-        if (opt->o_unix.android_shlib) {
+        if (is_asl) {
             addLoader("ANDMAJNZ", nullptr);  // constant PAGE_SIZE
         }
         else {
@@ -1488,7 +1505,7 @@ PackLinuxElf32::buildLinuxLoader(
         // End of daisy-chain fall-through.
 
         len += snprintf(&sec[len], sizeof(sec) - len, ",%s",
-            (sec_arm_attr || is_asl || opt->o_unix.android_shlib)
+            (sec_arm_attr || is_asl)
                 ? "HUMF_A,UMF_ANDROID"
                 : "HUMF_L,UMF_LINUX");
         if (hasLoaderSection("STRCON")) {
@@ -1535,7 +1552,7 @@ PackLinuxElf32::buildLinuxLoader(
 
         // $ARCH-linux.elf-main2.c calls upx_mmap_and_fd, not direct memfd_create
         len += snprintf(&sec[len], sizeof(sec) - len, ",%s",
-            (sec_arm_attr || is_asl || opt->o_unix.android_shlib)
+            (sec_arm_attr || is_asl)
                 ? "HUMF_A,UMF_ANDROID"
                 : "HUMF_L,UMF_LINUX");
         if (hasLoaderSection("SYSCALLS")) {
@@ -1599,7 +1616,7 @@ PackLinuxElf32::buildLinuxLoader(
           )
     ) { // shlib with ELF2 de-compressor
         addLoader("ELFMAINX");
-        addLoader((sec_arm_attr || is_asl || opt->o_unix.android_shlib)
+        addLoader((sec_arm_attr || is_asl)
             ? "HUMF_A,UMF_ANDROID"
             : "HUMF_L,UMF_LINUX");
         addLoader("ELFMAINZ,FOLDEXEC,IDENTSTR");
@@ -1615,7 +1632,7 @@ PackLinuxElf32::buildLinuxLoader(
         // Only if $ARCH-linux.elf-entry.S calls upx_mmap_and_fd instead of memfd_create
         if (this->e_machine != Elf32_Ehdr::EM_PPC
         &&  this->e_machine != Elf32_Ehdr::EM_MIPS)
-            addLoader((sec_arm_attr || is_asl || opt->o_unix.android_shlib)
+            addLoader((sec_arm_attr || is_asl)
                 ? "HUMF_A,UMF_ANDROID"
                 : "HUMF_L,UMF_LINUX");
         addLoader("ELFMAINZ,FOLDEXEC,IDENTSTR");
@@ -2819,7 +2836,7 @@ bad:
         unsigned const p_filesz = get_te32(&pload_x0->p_filesz);
         if (!((user_init_va - xct_va) < p_filesz)) {
             // Not in executable portion of first executable PT_LOAD.
-            if (0==user_init_va && opt->o_unix.android_shlib) {
+            if (0==user_init_va && is_asl) {
                 // Android allows (0 ==> skip) ?
                 upx_dt_init = 0;  // force steal of 'extra' DT_NULL
                 // XXX: FIXME: depends on SHT_DYNAMIC coming later
@@ -2964,7 +2981,7 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
         unsigned const p_filesz = get_te64(&pload_x0->p_filesz);
         if (!((user_init_va - xct_va) < p_filesz)) {
             // Not in executable portion of first executable PT_LOAD.
-            if (0==user_init_va && opt->o_unix.android_shlib) {
+            if (0==user_init_va && is_asl) {
                 // Android allows (0 ==> skip) ?
                 upx_dt_init = 0;  // force steal of 'extra' DT_NULL
                 // XXX: FIXME: depends on SHT_DYNAMIC coming later
@@ -3210,6 +3227,13 @@ tribool PackLinuxElf32::canPack()
             goto proceed;  // calls C library init for main program
         }
 
+        if (Elf32_Ehdr::EM_ARM==get_te16(&ehdri.e_machine)) {
+            sec_arm_attr = elf_find_section_type(Elf32_Shdr::SHT_ARM_ATTRIBUTES);
+            if (Elf32_Ehdr::ET_DYN == e_type) {
+                is_asl = (!!saved_opt_android_shlib) << 1;  // bit 1; see is_shlib
+            }
+        }
+
         // Heuristic HACK for shared libraries (compare Darwin (MacOS) Dylib.)
         // If there is an existing DT_INIT, and if everything that the dynamic
         // linker ld-linux needs to perform relocations before calling DT_INIT
@@ -3239,8 +3263,7 @@ tribool PackLinuxElf32::canPack()
             if (!(Elf32_Dyn::DF_1_PIE & elf_unsigned_dynamic(Elf32_Dyn::DT_FLAGS_1))) {
                 // not explicitly PIE main program
                 if (Elf32_Ehdr::EM_ARM == e_machine  // Android is common
-                &&  !opt->o_unix.android_shlib  // but not explicit
-                &&  !saved_opt_android_shlib
+                &&  !is_asl  // but not explicit
                 ) {
                     opt->info_mode++;
                     info("note: use --android-shlib if appropriate");
@@ -3531,8 +3554,7 @@ tribool PackLinuxElf64::canPack()
             if (!(Elf64_Dyn::DF_1_PIE & elf_unsigned_dynamic(Elf64_Dyn::DT_FLAGS_1))) {
                 // not explicitly PIE main program
                 if (Elf64_Ehdr::EM_AARCH64 == e_machine  // Android is common
-                &&  !opt->o_unix.android_shlib  // but not explicit
-                &&    !saved_opt_android_shlib
+                &&  !is_asl  // but not explicit
                 ) {
                     opt->info_mode++;
                     info("note: use --android-shlib if appropriate");
@@ -5480,13 +5502,9 @@ int PackLinuxElf32::pack2(OutputFile *fo, Filter &ft)
 {
     Extent x;
     unsigned k;
-    is_asl = (!!opt->o_unix.android_shlib) << 1;  // bit 1; see is_shlib
     unsigned const is_shlib = (0!=xct_off) | is_asl;
     unsigned pre_xct_top = 0;  // offset of end of PT_LOAD _before_ xct_off
 
-    if (Elf32_Ehdr::EM_ARM==get_te16(&ehdri.e_machine)) {
-        sec_arm_attr = elf_find_section_type(Elf32_Shdr::SHT_ARM_ATTRIBUTES);
-    }
     // count passes, set ptload vars
     uip->ui_total_passes = 0;
     for (k = 0; k < e_phnum; ++k) {
@@ -5759,7 +5777,7 @@ int PackLinuxElf64::pack2(OutputFile *fo, Filter &ft)
 {
     Extent x;
     unsigned k;
-    is_asl = (!!opt->o_unix.android_shlib) << 1;  // bit 1; see is_shlib
+    is_asl = (!!saved_opt_android_shlib) << 1;  // bit 1; see is_shlib
     unsigned const is_shlib = (0!=xct_off) | is_asl;
     unsigned pre_xct_top = 0;  // offset of end of PT_LOAD _before_ xct_off
 
@@ -6018,7 +6036,7 @@ unsigned PackLinuxElf32::forward_Shdrs(OutputFile *fo, Elf32_Ehdr *const eho)
         return 0;
     }
     unsigned penalty = total_out;
-    if (saved_opt_android_shlib) { // Forward select _Shdr
+    if (sec_arm_attr) { // Forward select _Shdr
         // Keep _Shdr for rtld data (below xct_off).
         // Discard _Shdr for compressed regions, except ".text" for gdb.
         // Keep _Shdr for SHF_WRITE.
@@ -6091,17 +6109,18 @@ unsigned PackLinuxElf32::forward_Shdrs(OutputFile *fo, Elf32_Ehdr *const eho)
                 ask_for[sh_info] = j;  // Enter my request, if any
             }
             if (   (sh_offset && sh_offset < xct_off)
-                || (Elf32_Shdr::SHF_WRITE & sh_flags)
                 || (j == e_shstrndx)
-                || (sec_arm_attr == sh_in)
-                || (want_types_mask & (1<<(0x1f & sh_type)))
+                || (Elf32_Shdr::SHF_WRITE & sh_flags)
+                || (sh_type < Elf32_Shdr::SHT_LOPROC
+                    && want_types_mask & (1<<(0x1f & sh_type)))
+                || (Elf32_Shdr::SHT_ARM_ATTRIBUTES == sh_type)
             ) {
                 *sh_out = *sh_in;  // *sh_in is a candidate for fowarding
                 if (sh_offset > xct_off) { // may slide down: earlier compression
                     if (sh_offset >= xct_off_hi) { // easy: so_slide down
-                        if (sh_out->sh_addr) // change only if non-zero
-                        //set_te32(&sh_out->sh_addr,   so_slide + sh_addr);
-                        set_te32(&sh_out->sh_offset, so_slide + sh_offset);
+                        if (Elf32_Shdr::SHT_ARM_ATTRIBUTES != sh_type) {
+                            slide_sh_offset(sh_out);
+                        }
                     }
                     else { // somewhere in compressed; try proportional (aligned)
                         // But note that PROGBITS without SHF_ALLOC
@@ -6121,7 +6140,7 @@ unsigned PackLinuxElf32::forward_Shdrs(OutputFile *fo, Elf32_Ehdr *const eho)
                     set_te16(&eho->e_shstrndx, sh_out -
                         (Elf32_Shdr *)mb_shdro.getVoidPtr());
                 }
-                if (sec_arm_attr == sh_in
+                if (Elf32_Shdr::SHT_ARM_ATTRIBUTES == sh_type
                 ||  (SHT_NOTE == sh_type && xct_off < sh_offset)
                 ) { // append a copy
                     set_te32(&sh_out->sh_offset, total_out);
@@ -6247,12 +6266,12 @@ unsigned PackLinuxElf64::forward_Shdrs(OutputFile *fo, Elf64_Ehdr *const eho)
         return 0;
     }
     unsigned penalty = total_out;
-    if (saved_opt_android_shlib) { // Forward select _Shdr
+    if (sec_arm_attr) { // Forward select _Shdr
         // Keep _Shdr for rtld data (below xct_off).
         // Discard _Shdr for compressed regions, except ".text" for gdb.
-        // Keep _Shdr for SHF_WRITE.
-        // Discard _Shdr with (0==sh_addr), except _Shdr[0]
+        // Keep _Shdr with SHF_WRITE.
         // Keep ARM_ATTRIBUTES
+        // Discard _Shdr with (0==sh_addr), except _Shdr[0]
         unsigned const want_types_mask =
               1u<<SHT_SYMTAB
             | 1u<<SHT_RELA
@@ -6318,6 +6337,7 @@ unsigned PackLinuxElf64::forward_Shdrs(OutputFile *fo, Elf64_Ehdr *const eho)
                 || (j == e_shstrndx)
                 || (sec_arm_attr == sh_in)
                 || (want_types_mask & (1<<(0x1f & sh_type)))
+                || (Elf32_Shdr::SHT_ARM_ATTRIBUTES == sh_type)
             ) {
                 *sh_out = *sh_in;
                 if (sh_offset > xct_off) { // may slide down: earlier compression
