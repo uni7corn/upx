@@ -195,7 +195,7 @@ SYS_write= __NR_write
         li a5,0
         mr a4,r_fd
         li a3,MAP_PRIVATE
-        li a2,PROT_WRITE|PROT_EXEC|PROT_READ  // PROT_WRITE: DEBUG only
+        li a2,PROT_EXEC|PROT_READ  // PROT_WRITE: DEBUG only
         mr a1,r_LENU
         li a0,0
 SYS_mmap= __NR_mmap

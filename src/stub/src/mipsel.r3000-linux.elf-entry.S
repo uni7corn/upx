@@ -251,7 +251,7 @@ unfold:  # IN: $r_fexp,$r_auxv,$r_PMASK,$r_FOLD
         sw zero,  5*NBPW(sp)  # last 2 args are in memory
         sw $r_mfd,4*NBPW(sp)
         li   a3,MAP_SHARED  # first 4 args are in registers, but kernel might store onto stack
-        li   a2,PROT_WRITE|PROT_READ|PROT_EXEC  # FIXME: PROT_WRITE is DEBUG only
+        li   a2,PROT_READ|PROT_EXEC  # FIXME: PROT_WRITE is DEBUG only
         lw   a1,sz_unc($r_FOLD)
         move a0,zero
         li v0,__NR_mmap; syscall; addiu sp,6*NBPW
