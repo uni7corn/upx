@@ -57,11 +57,12 @@ PackUnix::PackUnix(InputFile *f) :
     COMPILE_TIME_ASSERT(sizeof(p_info) == 12)
 
     // opt->o_unix.android_shlib is global, but must be hint
-    // that applies only when an actual ET_DYN on EM_ARM or EM_ARM64.
+    // that applies only when an actual ET_DYN on EM_ARM (only!).
     // User might say "--android-shlib" but give mulitple files
     // where some are ET_EXEC.
     saved_opt_android_shlib = opt->o_unix.android_shlib;
     opt->o_unix.android_shlib = 0;  // Must apply selectively
+    // Besides, cannot figure out why asl_slide_Shdrs does not work.
 }
 
 PackUnix::~PackUnix()
