@@ -274,6 +274,7 @@ ERR_LAB
         }
         else { // copy literal block
             DPRINTF("  copy %%p  %%p  %%p\\n", xi->buf, xo->buf, h.sz_cpr);
+            xi->size += sizeof(h);  // xread(xi, &h, sizeof(h)) was a peek
             xread(xi, xo->buf, h.sz_cpr);
         }
         xo->buf  += h.sz_unc;

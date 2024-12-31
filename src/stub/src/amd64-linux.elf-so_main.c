@@ -145,7 +145,7 @@ xread(Extent *x, char *buf, size_t count)
     char *p=x->buf, *q=buf;
     size_t j;
     if (x->size < count) {
-        exit(127);
+        err_exit(8);
     }
     for (j = count; 0!=j--; ++p, ++q) {
         *q = *p;
@@ -213,6 +213,7 @@ ERR_LAB
         }
         else { // copy literal block
             DPRINTF("  copy %%p  %%p  %%p\\n", xi->buf, xo->buf, h.sz_cpr);
+            xi->size += sizeof(h);  // xread(xi, &h, sizeof(h)) was a peek
             xread(xi, xo->buf, h.sz_cpr);
         }
         xo->buf  += h.sz_unc;

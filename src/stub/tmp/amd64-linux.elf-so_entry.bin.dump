@@ -6,9 +6,9 @@ Idx Name          Size      VMA               LMA               File off  Algn  
   1 HUMF_L        05  0  0  045  2**0  CONTENTS
   2 UMF_ANDROID   0133  0  0  050  2**4  CONTENTS
   3 UMF_LINUX     0d4  0  0  0184  2**2  CONTENTS
-  4 ELFMAINX      0184  0  0  0258  2**2  CONTENTS
-  5 ELFMAINZ      0  0  0  03dc  2**0  CONTENTS
-  6 STRCON        027  0  0  03dc  2**0  CONTENTS
+  4 ELFMAINX      0188  0  0  0258  2**2  CONTENTS
+  5 ELFMAINZ      0  0  0  03e0  2**0  CONTENTS
+  6 STRCON        027  0  0  03e0  2**0  CONTENTS
 SYMBOL TABLE:
 0000000000000000 l    d  ELFMAINZ 0 ELFMAINZ
 0000000000000000 l    d  STRCON 0 STRCON

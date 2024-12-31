@@ -110,7 +110,8 @@ O_RDONLY= 0
         sub %arg3l,%arg3l  // 0 == O_RDONLY
         lea str_psa(%rip),%arg2
         sub %arg1l,%arg1l  // 0 == impostor for FD_CWD
-        push $__NR_openat; call do_sys; push %rax  // fd_psa
+        push $__NR_openat; call do_sys; test %eax,%eax; js no_psa
+        push %rax  // fd_psa
 
         mov $512,%arg3l  // len
         lea 1*NBPW(%rsp),%arg2  // buffer
@@ -123,7 +124,9 @@ O_RDONLY= 0
         lodsq; xchg %rax,%rcx  // tag
         lodsq  // value
         cmp $AT_PAGESZ,%rcx; je 1f
-        cmp %end_aux,%rsi; jl 0b; mov $1<<12,%eax  // default 4KiB
+        cmp %end_aux,%rsi; jl 0b
+no_psa:
+        mov $1<<12,%eax  // default 4KiB
 1:
         neg %rax; push %rax  // MATCH_61  PAGE_MASK
 

@@ -250,6 +250,7 @@ ERR_LAB
             xi->size -= h.sz_cpr;
         }
         else { // copy literal block
+            xi->size += sizeof(h);  // xread(xi, &h, sizeof(h)) was a peek
             xread(xi, xo->buf, h.sz_cpr);
         }
         xo->buf  += h.sz_unc;
