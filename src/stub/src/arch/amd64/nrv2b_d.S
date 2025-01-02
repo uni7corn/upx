@@ -45,7 +45,11 @@ lit_n2b:
         incq %rsi; movb %dl,(%rdi)
         incq %rdi
 top_n2b:
+#ifdef WINDOWS_BACK
+        movb (%rsi),%dl  # prefetch: literal, or bottom 8 bits of offset
+#else
         movzbl (%rsi),%edx  # prefetch: literal, or bottom 8 bits of offset
+#endif
         jnextb1yp lit_n2b
         lea 1(lenq),off  # [len= 0] off= 1
 offmore_n2b:
@@ -53,9 +57,15 @@ offmore_n2b:
         jnextb0np offmore_n2b
 
         subl $ 3,off; jc len_n2b  # use previous offset
+#ifdef WINDOWS_BACK
+        shll $ 8,off; movzbl %dl,%edx
+        orl %edx,off; incq %rsi
+        xorl $~0,off; jz EOF
+#else
         shll $ 8,off; incq %rsi
         orl %edx,off
         xorl $~0,off; jz EOF
+#endif
         movslq off,dispq  # XXX: 2GB
 len_n2b:
         lea 1(lenq),off  # [len= 0] off= 1
@@ -73,11 +83,17 @@ gotlen_n2b:
 bot_n2b:  # In: 0==len
         jmp top_n2b
 
-#ifndef NO_METHOD_CHECK
+#ifndef NO_METHOD_CHECK  //{
 not_n2b:
         push %rdi; pop %rsi  # src = arg1
+#ifdef WINDOWS_BACK
+        # fall into 'EOF'
 #endif
+#endif  //}
+
+#ifndef WINDOWS_BACK
         # fall into daisy chain
+#endif
 /*
 vi:ts=8:et:nowrap
 */

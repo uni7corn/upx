@@ -53,7 +53,7 @@ section LZMA_ELF00
 #define M_LZMA          14
         cmpb $ M_LZMA,methb; jne not_lzma
 #endif
-        pushq %rbp; movq %rsp,%rbp  // we use alloca
+        pushq %rbp; movq %rsp,%rbp  // we use alloca; 'leave' is in LZMA_DEC30
 
 //LzmaDecode(  // from lzmaSDK/C/7zip/Compress/LZMA_C/LzmaDecode.h
 //      %arg1= &CLzmaDecoderState,
@@ -124,19 +124,22 @@ section LZMA_DEC30
 #endif
         movl szSizeT(%rbx),%ecx; addq %rcx,%rsi  //  inSizeProcessed
         movl        (%rbx),%edx; addq %rdx,%rdi  // outSizeProcessed
-        leave  // movl %ebp,%rsp; popq %rbp
-#ifdef WINDOWS_BACK
-        jmp eof_lzma_win
-#else
-        jmp eof_lzma
-#endif // WINDOWS_BACK
+        leave  //  %rsp = %rbp;  %rbp = * %rsp ++;  "enter" is in LZMA_ELF00
 
-#ifndef NO_METHOD_CHECK
-not_lzma:
+#ifdef WINDOWS_BACK  //{  Must match stub/amd64-win64.pe.h of upx-v4.2.4.
+    // amd64-win64.pe.S has unconditional "#define NO_METHOD_CHECK"
+    // because p_w64pe_amd64.cpp assumes only one method, and generates it;
+    // thus there is no need to check the method, nor to recover from a mismatch.
+    // In such a case LZMA_DEC30 ends with the [inner] 'leave' above, and
+    // falls into section PEMAIN20, which immediately has an [outer] 'leave'.
+#else  //}{  ndef WINDOWS_BACK
+        jmp eof_lzma  # lzma de-compression is done
+    #ifndef NO_METHOD_CHECK  //{
+    not_lzma:  # recover from not matching M_LZMA
         push %rdi; pop %rsi  # src = arg1
         # fall into next daisy-chain method
-#endif // NO_METHOD_CHECK
-eof_lzma_win:
+    #endif  //}
+#endif  //}
 
 // vi:ts=8:et
 

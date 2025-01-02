@@ -45,7 +45,11 @@ lit_n2e:
         incq %rsi; movb %dl,(%rdi)
         incq %rdi
 top_n2e:
+#ifdef WINDOWS_BACK
+        movb (%rsi),%dl  # speculate: literal, or bottom 8 bits of offset
+#else
         movzbl (%rsi),%edx  # speculate: literal, or bottom 8 bits of offset
+#endif
         jnextb1yp lit_n2e
         lea 1(lenq),off  # [len= 0] off= 1
         jmp getoff_n2e
@@ -58,9 +62,15 @@ getoff_n2e:
         jnextb0np off_n2e
 
         subl $ 3,off; jc offprev_n2e
+#ifdef WINDOWS_BACK
+        shll $ 8,off; movzbl %dl,%edx
+        orl %edx,off; incq %rsi
+        xorl $~0,off; jz eof
+#else
         shll $ 8,off; incq %rsi
         orl %edx,off
         xorl $~0,off; jz EOF
+#endif
         sarl off  # Carry= original low bit
         movslq off,dispq  # XXX: 2GB
         jc lenlast_n2e
