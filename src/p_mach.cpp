@@ -2,7 +2,7 @@
 
    This file is part of the UPX executable compressor.
 
-   Copyright (C) 2004-2024 John Reiser
+   Copyright (C) 2004-2025 John Reiser
    All Rights Reserved.
 
    UPX and the UCL library are free software; you can redistribute them
@@ -43,6 +43,9 @@
 #endif
 #if (ACC_CC_GNUC >= 0x040200)
 #  pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+#if defined(__CHERI__) && defined(__CHERI_PURE_CAPABILITY__)
+#  pragma clang diagnostic ignored "-Wcheri-capability-misuse" // TODO later
 #endif
 
 static const CLANG_FORMAT_DUMMY_STATEMENT
@@ -1754,6 +1757,10 @@ tribool PackMachBase<T>::canUnpack()
         else { // PackHeader follows loader at __LINKEDIT
             if ((off_t)bufsize > (fi->st_size() - offLINK)) {
                 bufsize = fi->st_size() - offLINK;
+                if (bufsize < sizeof(struct b_info)) {
+                    throwCantUnpack("bad offLINK %p %p",
+                        (void *)offLINK, (void *)file_size);
+                }
             }
             fi->seek(offLINK, SEEK_SET);
         }

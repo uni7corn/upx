@@ -14,12 +14,14 @@ RUN dpkg --add-architecture i386 \
         # the following packages are not required for rebuilding the stubs, but
         # they do make the image *much* more convenient and also allow building
         # the full UPX binary inside the container via CMake:
-        7zip bfs bubblewrap busybox bzip2 bzip3 cabextract ccache chrpath cmake cpio dash diffstat \
-        elfutils execstack fd-find file fish fzf g++ gawk gdb gojq ht htop hyperfine jq ksh \
-        libzstd-dev lsb-release lz4 lzip lzop minify mksh moreutils musl neovim ninja-build \
+        7zip bat bfs btop bubblewrap busybox bzip2 bzip3 cabextract ccache chrpath cmake cpio \
+        dash diffstat direnv elfutils execstack eza fd-find file fish fzf \
+        g++ gawk gdb gojq ht htop hyperfine jq ksh \
+        lftp libzstd-dev lsb-release lsd lz4 lzip lzop minify mksh moreutils musl neovim ninja-build \
         p7zip parallel patch patchelf patchutils pax-utils proot \
-        python3 python3-pyasn1 python3-pycryptodome python3-pycurl python3-toml python3-yaml python3-zstd \
-        re2c ripgrep rsync screen strace universal-ctags unzip valgrind yash yq \
+        python3 python3-pyasn1 python3-pycryptodome python3-pycurl python3-tomli python3-tomli-w \
+        python3-yaml python3-zstd \
+        re2c ripgrep rsync screen socat strace universal-ctags unzip valgrind yash yq \
         zip zlib1g-dev zoxide zsh zstd \
         # extra packages for compiling with "gcc -m32" and "gcc -mx32":
         g++-multilib gcc-multilib \
@@ -79,15 +81,17 @@ RUN useradd upx -U --uid 2000 --shell /bin/bash -m \
     # symlink upx-stubtools
     && ln -s /usr/local/bin/bin-upx-20221212 .local/bin/bin-upx \
     # some convenience settings according to upx developer preferences
+    && echo "alias path='echo PATH=\"\$PATH\"'" >> .bashrc \
     && echo "alias md=mkdir" >> .bashrc \
     && echo "alias rd=rmdir" >> .bashrc \
     && echo 'mdd() { mkdir "$1" && cd "$1"; }' >> .bashrc \
     && echo 'm() { make "$@"; }' >> .bashrc \
+    && echo 'mm() { make -j8 "$@"; }' >> .bashrc \
     && echo 'tn() { time nice "$@"; }' >> .bashrc \
     && echo 'tnm() { time nice make "$@"; }' >> .bashrc \
-    && echo 'tnmm() { time nice make -j "$@"; }' >> .bashrc \
+    && echo 'tnmm() { time nice make -j8 "$@"; }' >> .bashrc \
     && echo 'source /usr/share/bash-completion/completions/make' >> .bashrc \
-    && echo 'complete -F _make m tnm tnmm' >> .bashrc \
+    && echo 'complete -F _make m mm tnm tnmm' >> .bashrc \
     && echo 'eval "$(zoxide init bash)"' >> .bashrc \
     && echo "alias zz=zi\nalias y=z\nalias yy=zi" >> .bashrc \
     && echo "alias cd..='cd ..'" >> .bashrc \
