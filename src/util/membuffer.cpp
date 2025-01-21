@@ -177,6 +177,8 @@ void MemBuffer::alloc(upx_uint64_t bytes) may_throw {
     size_t malloc_bytes = mem_size(1, bytes); // check size
     if (use_simple_mcheck())
         malloc_bytes += 32;
+    else
+        malloc_bytes += 4;
     byte *p = (byte *) ::malloc(malloc_bytes);
     NO_printf("MemBuffer::alloc %llu: %p\n", bytes, p);
     if (!p)

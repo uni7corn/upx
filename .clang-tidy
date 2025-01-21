@@ -22,6 +22,7 @@ Checks: >
     -bugprone-switch-missing-default-case,
   clang-analyzer-*,
     -clang-analyzer-core.CallAndMessage,
+    -clang-analyzer-deadcode.DeadStores,
     -clang-analyzer-optin.performance.Padding,
     -clang-analyzer-security.PointerSub,
     -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,

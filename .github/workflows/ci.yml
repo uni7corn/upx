@@ -19,8 +19,8 @@ env:
   UPX_DEBUG_TEST_FLOAT_DIVISION_BY_ZERO: 1
   UPX_DEBUG_TEST_LIBC_QSORT: 1
   ZSTD_CLEVEL: 9
-  # 2025-01-08
-  ZIG_DIST_VERSION: 0.14.0-dev.2627+6a21d18ad
+  # 2025-01-20
+  ZIG_DIST_VERSION: 0.14.0-dev.2847+db8ed730e
 
 jobs:
   job-rebuild-and-verify-stubs:
