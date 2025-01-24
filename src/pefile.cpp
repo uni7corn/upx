@@ -1937,6 +1937,8 @@ void PeFile::processResources(Resource *res) {
 
     for (soresources = res->dirsize(); res->next(); soresources += 4 + res->size())
         ;
+    if (!soresources)
+        return; // empty .rsrc Section
     mb_oresources.alloc(soresources);
     mb_oresources.clear();
     oresources = mb_oresources; // => SPAN_S
