@@ -43,6 +43,9 @@
 #include "p_lx_elf.h"
 #include "ui.h"
 
+// NOLINTBEGIN(clang-analyzer-core.CallAndMessage)
+// NOLINTBEGIN(clang-analyzer-deadcode.DeadStores)
+
 #if defined(__CHERI__) && defined(__CHERI_PURE_CAPABILITY__)
 #  pragma clang diagnostic ignored "-Wcheri-capability-misuse" // TODO later
 #  pragma clang diagnostic ignored "-Wcheri-provenance" // TODO later
@@ -9121,5 +9124,8 @@ void PackLinuxElf::unpack(OutputFile * /*fo*/)
 {
     throwCantUnpack("internal error");
 }
+
+// NOLINTEND(clang-analyzer-deadcode.DeadStores)
+// NOLINTEND(clang-analyzer-core.CallAndMessage)
 
 /* vim:set ts=4 sw=4 et: */

@@ -20,7 +20,7 @@ env:
   UPX_DEBUG_TEST_LIBC_QSORT: 1
   ZSTD_CLEVEL: 9
   # 2025-01-20
-  ZIG_DIST_VERSION: 0.14.0-dev.2847+db8ed730e
+  ZIG_DIST_VERSION: 0.14.0-dev.2851+b074fb7dd
 
 jobs:
   job-rebuild-and-verify-stubs:
@@ -503,7 +503,7 @@ jobs:
           - { zig_target: x86_64-windows-gnu }
     name: ${{ format('zigcc {0} {1}', matrix.zig_target, matrix.zig_pic) }}
     runs-on: ubuntu-latest
-    container: ${{ contains(matrix.qemu, 'qemu-armeb') && 'alpine:3.19' || 'alpine:3.20' }} # qemu-armeb bug
+    container: 'alpine:3.21'
     env:
       UPX_CONFIG_HAVE_WORKING_BUILD_RPATH: ''
       # for zig-cc wrapper scripts (see below):
