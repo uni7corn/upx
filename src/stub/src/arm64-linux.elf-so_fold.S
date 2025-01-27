@@ -56,7 +56,7 @@ get_page_mask: .globl get_page_mask
 
 Punmap: .globl Punmap
         ldr x8,PAGE_MASK
-        and x8,x0,x8
+        bic x8,x0,x8
         sub x0,x0,x8
         add x1,x1,x8
 munmap: .globl munmap
@@ -66,7 +66,7 @@ munmap: .globl munmap
 Pprotect: .globl Pprotect
 mprotect: .globl mprotect
         ldr x8,PAGE_MASK
-        and x8,x0,x8
+        bic x8,x0,x8
         sub x0,x0,x8
         add x1,x1,x8
         do_sys __NR_mprotect; ret
@@ -80,11 +80,18 @@ mmap_privanon: .globl mmap_privanon
 
 Pmap: .globl Pmap
         ldr x8,PAGE_MASK
-        and x8,x0,x8
+        bic x8,x0,x8
         sub x0,x0,x8
         add x1,x1,x8
 mmap: .globl mmap
         do_sys __NR_mmap; ret
+
+Psync: .globl Psync
+        ldr x8,PAGE_MASK
+        bic x8,x0,x8
+        sub x0,x0,x8
+        add x1,x1,x8
+        do_sys __NR_msync; ret
 
 fold:  // enter here (x0= &so_info; x1= &{argc,argv,envp,lr}
 //%esp:
@@ -198,13 +205,6 @@ brk:
         .globl readlink
 readlink:
         do_sys __NR_readlink; ret
-
-Psync: .globl Psync
-        ldr x8,PAGE_MASK
-        bic x8,x0,x8
-        sub x0,x0,x8
-        add x1,x1,x8
-        do_sys __NR_msync; ret
 
         .globl __sync_cache_range
 __sync_cache_range:  // (void *lo, void *hi)
