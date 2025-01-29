@@ -68,7 +68,6 @@ static_assert(sizeof(void *) == sizeof(long));
 #endif
 
 // ACC and C system headers
-#include "system_features.h"
 #ifndef ACC_CFG_USE_NEW_STYLE_CASTS
 #define ACC_CFG_USE_NEW_STYLE_CASTS 1
 #endif
@@ -101,6 +100,7 @@ static_assert(sizeof(void *) == sizeof(long));
 
 // C++ freestanding headers
 #if __cplusplus >= 202002L
+#include <version>
 #include <bit>
 #endif
 #include <cstddef>
