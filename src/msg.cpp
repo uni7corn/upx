@@ -51,7 +51,7 @@ void printClearLine(FILE *f) noexcept {
     fflush(stderr);
     if (f == nullptr)
         f = stdout;
-    con_fprintf(f, "%s", clear_line_msg);
+    con_fprintf(f, "%s", clear_line_msg); // NOLINT(clang-analyzer-unix.Stream)
     fflush(f);
     printSetNl(0);
 }
