@@ -2359,7 +2359,7 @@ PackLinuxElf32::invert_pt_dynamic(Elf32_Dyn const *dynp, u32_t headway)
     unsigned const z_str = dt_table[Elf32_Dyn::DT_STRSZ];
     strtab_max = !z_str ? 0 : get_te32(&dynp0[-1+ z_str].d_val);
     unsigned const z_tab = dt_table[Elf32_Dyn::DT_STRTAB];
-    unsigned const tmp1 = get_te32(&dynp0[-1+ z_tab].d_val);
+    unsigned const tmp1 = !z_tab ? 0 : get_te32(&dynp0[-1+ z_tab].d_val);
     if (tmp1 < sz_elf_hdrs) {
         throwCantPack("bad DT_STRTAB %#x", tmp1);
     }
@@ -8475,7 +8475,7 @@ PackLinuxElf64::invert_pt_dynamic(Elf64_Dyn const *dynp, upx_uint64_t headway)
     unsigned const z_str = dt_table[Elf64_Dyn::DT_STRSZ];
     strtab_max = !z_str ? 0 : get_te64(&dynp0[-1+ z_str].d_val);
     unsigned const z_tab = dt_table[Elf64_Dyn::DT_STRTAB];
-    unsigned const tmp1 = get_te64(&dynp0[-1+ z_tab].d_val);
+    unsigned const tmp1 = !z_tab ? 0 : get_te64(&dynp0[-1+ z_tab].d_val);
     if (tmp1 < sz_elf_hdrs) {
         throwCantPack("bad DT_STRTAB %#x", tmp1);
     }
