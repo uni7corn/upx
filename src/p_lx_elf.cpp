@@ -2365,7 +2365,7 @@ PackLinuxElf32::invert_pt_dynamic(Elf32_Dyn const *dynp, u32_t headway)
     }
     unsigned const strtab_beg = !z_tab ? 0 : elf_get_offset_from_address(tmp1);
 
-    if (!z_str || !z_tab
+    if (!z_str || !z_tab || !(strtab_max + strtab_beg)
     || (this->file_size - strtab_beg) < strtab_max  // strtab overlaps EOF
         // last string in table must have terminating NUL
     ||  '\0' != ((char *)file_image.getVoidPtr())[-1+ strtab_max + strtab_beg]
@@ -8481,7 +8481,7 @@ PackLinuxElf64::invert_pt_dynamic(Elf64_Dyn const *dynp, upx_uint64_t headway)
     }
     unsigned const strtab_beg = !z_tab ? 0 : elf_get_offset_from_address(tmp1);
 
-    if (!z_str || !z_tab
+    if (!z_str || !z_tab || !(strtab_max + strtab_beg)
     || (this->file_size - strtab_beg) < strtab_max  // strtab overlaps EOF
         // last string in table must have terminating NUL
     ||  '\0' != ((char *)file_image.getVoidPtr())[-1+ strtab_max + strtab_beg]
