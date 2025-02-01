@@ -8653,24 +8653,36 @@ Elf32_Sym const *PackLinuxElf32::elf_lookup(char const *name) const
         unsigned const n_bucket = get_te32(&hashtab[0]);
         unsigned const *const buckets = &hashtab[2];
         unsigned const *const chains = &buckets[n_bucket];
+        // Find the end of DT_HASH and DT_DYNSYM. Perhaps elf_find_table_size()
+        // depends on too many valid input values?
+        void const *l_hash = nullptr, *l_sym = nullptr;
+        for (unsigned j = 0; j < DT_NUM; ++j) {
+            void const *const ptr = dt_offsets[j] + (char const *)file_image.getVoidPtr();
+            if (!l_hash && hashtab == ptr) {
+                l_hash = dt_offsets[1+ j] + (char const *)file_image.getVoidPtr();
+            }
+            if (!l_sym && dynsym == ptr) {
+                l_sym = dt_offsets[1+ j] + (char const *)file_image.getVoidPtr();
+            }
+            if (l_sym && l_hash)
+                break;  // found both
+            if (this->file_size == (off_t)dt_offsets[j])
+                break;  // end sentinel
+        }
         if (n_bucket) {
             unsigned const m = elf_hash(name) % n_bucket;
-            unsigned nvisit = 0;
+            unsigned n_visit = 0;
             unsigned si;
-            if ((file_size + file_image) <= (void const *)chains) {
-                throwCantPack("bad n_bucket %#x\n", n_bucket);
-            }
+            if (l_hash <= &buckets[m])
+                throwCantPack("bad DT_HASH %u", m);
             for (si= get_te32(&buckets[m]); si; si = get_te32(&chains[si])) {
-                if (n_bucket <= si) {
+                if (l_sym <= &dynsym[si])
                     throwCantPack("bad DT_HASH chain %d\n", si);
-                }
                 char const *const p= get_dynsym_name(si, (unsigned)-1);
-                if (p && 0==strcmp(name, p)) {
+                if (p && 0==strcmp(name, p))
                     return &dynsym[si];
-                }
-                if (n_bucket <= ++nvisit) {
+                if (l_sym <= &dynsym[n_visit++])
                     throwCantPack("circular DT_HASH chain %d\n", si);
-                }
             }
         }
     }
@@ -8742,24 +8754,36 @@ Elf64_Sym const *PackLinuxElf64::elf_lookup(char const *name) const
         unsigned const n_bucket = get_te32(&hashtab[0]);
         unsigned const *const buckets = &hashtab[2];
         unsigned const *const chains = &buckets[n_bucket];
+        // Find the end of DT_HASH and DT_DYNSYM. Perhaps elf_find_table_size()
+        // depends on too many valid input values?
+        void const *l_hash = nullptr, *l_sym = nullptr;
+        for (unsigned j = 0; j < DT_NUM; ++j) {
+            void const *const ptr = dt_offsets[j] + (char const *)file_image.getVoidPtr();
+            if (!l_hash && hashtab == ptr) {
+                l_hash = dt_offsets[1+ j] + (char const *)file_image.getVoidPtr();
+            }
+            if (!l_sym && dynsym == ptr) {
+                l_sym = dt_offsets[1+ j] + (char const *)file_image.getVoidPtr();
+            }
+            if (l_sym && l_hash)
+                break;  // found both
+            if (this->file_size == (off_t)dt_offsets[j])
+                break;  //end
+        }
         if (n_bucket) { // -rust-musl can have "empty" hashtab
             unsigned const m = elf_hash(name) % n_bucket;
-            unsigned nvisit = 0;
+            unsigned n_visit = 0;
             unsigned si;
-            if ((file_size + file_image) <= (void const *)chains) {
-                throwCantPack("bad n_bucket %#x\n", n_bucket);
-            }
+            if (l_hash <= &buckets[m])
+                throwCantPack("bad DT_HASH %u", m);
             for (si= get_te32(&buckets[m]); si; si = get_te32(&chains[si])) {
-                if (n_bucket <= si) {
+                if (l_sym <= &dynsym[si])
                     throwCantPack("bad DT_HASH chain %d\n", si);
-                }
                 char const *const p= get_dynsym_name(si, (unsigned)-1);
-                if (p && 0==strcmp(name, p)) {
+                if (p && 0==strcmp(name, p))
                     return &dynsym[si];
-                }
-                if (n_bucket <= ++nvisit) {
+                if (l_sym <= &dynsym[n_visit++])
                     throwCantPack("circular DT_HASH chain %d\n", si);
-                }
             }
         }
     }
