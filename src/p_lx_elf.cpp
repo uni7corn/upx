@@ -3771,7 +3771,11 @@ PackLinuxElf32::generateElfHdr(
         h3->ehdr.e_ident[EI_DATA] = ei_data;
         h3->ehdr.e_ident[EI_VERSION] = EV_CURRENT;
         h3->ehdr.e_ident[EI_OSABI] = ei_osabi;
-        h3->ehdr.e_ident[EI_ABIVERSION] = 1;  // ei_abiversion;
+
+        h3->ehdr.e_ident[EI_ABIVERSION] = ehdri.e_ident[EI_ABIVERSION];  // ei_abiversion ?
+        // Perhaps NT_GNU_ABI_TAG from Shdr .note.ABI-tag  or PT_NOTE ?
+        // But that is much too recent (and un-standardized) for other software.
+
         set_te32(&h3->ehdr.e_phoff, sizeof(Elf32_Ehdr));
         set_te16(&h3->ehdr.e_ehsize,sizeof(Elf32_Ehdr));
         set_te16(&h3->ehdr.e_phentsize, sizeof(Elf32_Phdr));
