@@ -1870,7 +1870,7 @@ PackLinuxElf64::buildLinuxLoader(
         ) { // main program with ELF2 de-compressor
         addLoader("ELFMAINX,ELFMAINZ,FOLDEXEC,IDENTSTR");
         if (this->e_machine==Elf64_Ehdr::EM_PPC64
-        &&  elfout.ehdr.e_ident[Elf64_Ehdr::EI_DATA]==Elf64_Ehdr::ELFDATA2MSB) {
+        &&  ehdri.e_ident[Elf64_Ehdr::EI_DATA]==Elf64_Ehdr::ELFDATA2MSB) {
             addLoader("ELFMAINZe");
         }
         if (!xct_off) { // main program
