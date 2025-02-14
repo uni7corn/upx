@@ -119,7 +119,7 @@ O_RDONLY= 0
         push $__NR_read; call do_sys; lea (%rax,%arg2),%end_aux
         pop %arg1  // fd_psa
         push $__NR_close; call do_sys
-        lea 1*NBPW(%rsp),%rsi  // buffer
+        mov %rsp,%rsi  // buffer
 0:
         lodsq; xchg %rax,%rcx  // tag
         lodsq  // value

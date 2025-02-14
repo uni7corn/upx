@@ -2797,9 +2797,9 @@ upx_uint64_t PackLinuxElf32::canPack_Shdr(Elf32_Phdr const *pload_x0)
     Elf32_Shdr const *shdr = shdri;
   for (int j= e_shnum; --j>=0; ++shdr) {
     unsigned const sh_type = get_te32(&shdr->sh_type);
-    if (Elf32_Shdr::SHF_EXECINSTR & get_te32(&shdr->sh_flags)) {
+    if (!shdr_xva && Elf32_Shdr::SHF_EXECINSTR & get_te32(&shdr->sh_flags)) {
         shdr_xva = shdr;
-        xct_va = umin((unsigned) xct_va, get_te32(&shdr->sh_addr));
+        xct_va = get_te32(&shdr_xva->sh_addr);
     }
     // Hook the first slot of DT_PREINIT_ARRAY or DT_INIT_ARRAY.
     if (!user_init_rp && (
@@ -2925,20 +2925,6 @@ bad:
         }
     }
   }
-    // If shdr_xva->sh_size is too small, then probably it won't compress.
-    // So look for a Shdr that has PROGBITS and not SHF_WRITE, which is
-    // much larger, and use that for the compressibility decision.
-    if (shdr_xva->sh_size < 0x1000) {
-        shdr = shdr_xva;
-        while (SHT_PROGBITS == get_te32(&shdr[-1].sh_type))  --shdr;  // backup
-        for (; SHT_PROGBITS == get_te32(&shdr->sh_type)
-               && !(SHF_WRITE & get_te32(&shdr->sh_flags)); ++shdr) {
-            if (0x4000 <= get_te32(&shdr->sh_size)) {
-                xct_va = get_te32(&shdr->sh_addr);  // hopefully more compressible
-                break;
-            }
-        }
-    }
     return xct_va;
 }
 
@@ -2948,9 +2934,9 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
     Elf64_Shdr const *shdr = shdri;
   for (int j= e_shnum; --j>=0; ++shdr) {
     unsigned const sh_type = get_te32(&shdr->sh_type);
-    if (Elf64_Shdr::SHF_EXECINSTR & get_te64(&shdr->sh_flags)) {
+    if (!shdr_xva && Elf64_Shdr::SHF_EXECINSTR & get_te64(&shdr->sh_flags)) {
         shdr_xva = shdr;
-        xct_va = umin(xct_va, get_te64(&shdr->sh_addr));
+        xct_va = get_te64_32(&shdr_xva->sh_addr);
     }
     // Hook the first slot of DT_PREINIT_ARRAY or DT_INIT_ARRAY.
     if (!user_init_rp && (
@@ -3070,20 +3056,6 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
         }
     }
   }
-    // If shdr_xva->sh_size is too small, then probably it won't compress.
-    // So look for a Shdr that has PROGBITS and not SHF_WRITE, which is
-    // much larger, and use that for the compressibility decision.
-    if (shdr_xva->sh_size < 0x1000) {
-        shdr = shdr_xva;
-        while (SHT_PROGBITS == get_te32(&shdr[-1].sh_type))  --shdr;  // backup
-        for (; SHT_PROGBITS == get_te32(&shdr->sh_type)
-               && !(SHF_WRITE & get_te64(&shdr->sh_flags)); ++shdr) {
-            if (0x4000 <= get_te64(&shdr->sh_size)) {
-                xct_va = get_te64(&shdr->sh_addr);  // hopefully more compressible
-                break;
-            }
-        }
-    }
     return xct_va;
 }
 
@@ -5796,6 +5768,7 @@ int PackLinuxElf64::pack2_shlib(OutputFile *fo, Filter &ft, unsigned pre_xct_top
             // Copy up to xct_off
             // FIXME: fo->write(&file_image[x.offset], x.size);
             if (len) {
+                fi->seek(p_offset, SEEK_SET);
                 fi->read(ibuf,  len);  total_in  += len;
                 fo->write(ibuf, len);  total_out += len;
 
