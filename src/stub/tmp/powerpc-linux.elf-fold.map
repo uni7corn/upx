@@ -50,24 +50,24 @@ LOAD tmp/powerpc-expand.o
 LOAD tmp/powerpc-linux.elf-main2.o
 OUTPUT(tmp/powerpc-linux.elf-fold.bin elf32-powerpc)
 
-SYSCALLS        0x0000000000000000       0xbc
- SYSCALLS       0x0000000000000000       0xbc tmp/powerpc-linux.elf-fold.o
-                0x0000000000000058                munmap
-                0x0000000000000074                memcpy
+SYSCALLS        0x0000000000000000       0xf8
+ SYSCALLS       0x0000000000000000       0xf8 tmp/powerpc-linux.elf-fold.o
+                0x0000000000000050                munmap
+                0x00000000000000b0                memcpy
                 0x0000000000000010                readlink
-                0x0000000000000020                ftruncate
-                0x0000000000000060                mmap
-                0x0000000000000030                write
-                0x0000000000000018                memfd_create
-                0x0000000000000038                read
-                0x0000000000000098                memset
-                0x0000000000000050                msync
-                0x00000000000000b4                my_bkpt
+                0x0000000000000018                ftruncate
+                0x0000000000000058                mmap
+                0x0000000000000028                write
+                0x000000000000006c                memfd_create
+                0x0000000000000030                read
+                0x00000000000000d4                memset
+                0x0000000000000048                msync
+                0x00000000000000f0                my_bkpt
                 0x0000000000000000                exit
                 0x0000000000000008                brk
-                0x0000000000000040                open
-                0x0000000000000048                mprotect
-                0x0000000000000028                close
+                0x0000000000000038                open
+                0x0000000000000040                mprotect
+                0x0000000000000020                close
 
 EXP_HEAD        0x0000000000000000       0xa8
  EXP_HEAD       0x0000000000000000       0xa8 tmp/powerpc-expand.o

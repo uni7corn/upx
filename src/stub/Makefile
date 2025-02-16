@@ -1937,7 +1937,7 @@ tmp/powerpc-linux.elf-fold.o : $(srcdir)/src/$$T.S
 	$(call tc,gcc) -c $< -o $@
 	$(call tc,f-objstrip,$@)
 
-tmp/powerpc-linux.elf-main2.o : $(srcdir)/src/$$T.c
+tmp/powerpc-linux.elf-main2.o : $(srcdir)/src/$$T.c $(srcdir)/src/i386-linux.elf-main2.c
 	$(call tc,gcc) -c $< -o $@
 	$(call tc,f-objstrip,$@)
 

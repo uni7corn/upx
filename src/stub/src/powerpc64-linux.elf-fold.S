@@ -375,8 +375,6 @@ mprotect: .globl mprotect
         li 0,SYS_mprotect; 5: b 5f
 msync: .globl msync
         li 0,SYS_msync; 5: b 5f
-memfd_create: .globl memfd_create
-        li r0,SYS_memfd_create; 5: b 5f
 ftruncate: .globl ftruncate
         li r0,SYS_ftruncate;5: b 5f
 exit: .globl exit
@@ -410,6 +408,28 @@ O_TMPFILE= 020000000  // 0x400000
         ori a3,a3,O_RDWR
         li r0,SYS_open; sc; bns+ ok_memfd; teq r0,r0
 ok_memfd:
+        ret
+
+__NR_memfd_create= 360
+MFD_EXEC= 0x10
+EINVAL= 22
+
+memfd_create: .globl memfd_create
+        mflr a3
+        li a1,MFD_EXEC  // modern clue
+mfd_try:
+        call 0f; .asciz "upx"; 0:
+        mflr a0
+SYS_memfd_create= __NR_memfd_create
+        li r0,SYS_memfd_create; sc; bns+ 0f  // success
+        cmpi cr7,a1,0; bne cr7,1f  // not 2nd time
+8:
+        teq r0,r0  // 2nd error, or unexpected 1st error
+1:
+        cmpi cr7,a0,EINVAL; bne cr7,8b  // unexpected 1st error
+        li a1,0; b mfd_try  // 2nd attempt
+0:
+        mtlr a3
         ret
 
 memcpy: .globl memcpy  // (dst, src, n)

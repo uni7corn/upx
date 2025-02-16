@@ -71,6 +71,8 @@ __NR_close = 6
 __NR_open =  5
 __NR_write = 4
 
+EINVAL= 22
+
   section ELFMAINX
 sz_pack2= .-4
 _start: .globl _start
@@ -168,11 +170,19 @@ unfold:  // IN: r_auxv, r_PMASK
         sub r_elf,r_elf,r0  // r_elf=&Elf32_Ehdr of stub
         lwz r_LENU, sz_unc + LBINFO - LrFLD(r_FLD)  // sz_unc of fold
 
+        li a1,MFD_EXEC  // modern clue
+mfd_try:
         call 0f; .asciz "upx"; 0:
         mflr a0
-        li a1,MFD_EXEC
 SYS_memfd_create= __NR_memfd_create
-        li r0,SYS_memfd_create; sc; bns+ 0f; teq r0,r0; 0:
+        li r0,SYS_memfd_create; sc; bns+ 0f  // success
+        cmpi cr7,a1,0; bne cr7,1f  // not 2nd time
+8:
+        teq r0,r0  // 2nd error, or unexpected 1st error
+1:
+        cmpi cr7,a0,EINVAL; bne cr7,8b  // unexpected 1st error
+        li a1,0; b mfd_try  // 2nd attempt
+0:
         mr r_fd,a0
 
 //Reserve enough space to decompress the folded code of the stub
