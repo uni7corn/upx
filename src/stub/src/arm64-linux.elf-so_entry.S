@@ -90,7 +90,7 @@ arg6w .req w5
 
         .balign 4
 _start: .globl _start
-        bkpt // DEBUG
+        // bkpt // DEBUG
         PUSH4 (x0,x1,x2,lr)  // MATCH_00
 
         sub sp,sp,#2*NBPW  // space for ADRU, LENU
@@ -98,9 +98,8 @@ F_ADRU= 0 * NBPW
 F_LENU= 1 * NBPW
 F_ARGC= 2 * NBPW
 
-        bl L70
-L70_ret:
-    foldi   .req lr
+        adr x30,fold_info  // assembler bug: 'lr' not an integer register
+    foldi   .req x30
     old_sp  .req x14  // busy: lr,x14
         mov old_sp,sp
         ldr w0,[foldi,#sz_unc]
@@ -124,7 +123,7 @@ O_RDONLY= 0
         mov w0,psa_fd; do_sys __NR_close
         .unreq psa_fd
 0:
-        ldr s0,[x1,#NBPW]  // value
+        ldr x0,[x1,#NBPW]  // value
         ldr x2,[x1],#2*NBPW  // tag
         cmp x2,#AT_PAGESZ; beq 1f
         cmp x1,aux_end; blo 0b; mov x0,#1<<12  // default 4KiB
@@ -144,6 +143,7 @@ O_RDONLY= 0
     mfd     .req w15  // busy: x15,x14
         do_sys __NR_memfd_create; mov mfd, w0
 
+        str page_m, [sp,#0]
         mov arg2,sp
         ldr arg3,[old_sp,#F_LENU]
         do_sys __NR_write
@@ -166,7 +166,6 @@ O_RDONLY= 0
 
         adr arg1,_start - 4*4  // &SO_INFO
         add arg2,sp,#F_ARGC  // &{argc, argv, envp}
-        str page_m, [u_ptr,#0]
         add u_ptr,u_ptr,2*NBPW
         br u_ptr
         .unreq u_ptr
@@ -198,9 +197,6 @@ off     .req w5
 // IDENTSTR goes here
 
   section ELFMAINZ
-L70:
-lr .req x30
-        blr lr  // lr= &fold_info
 fold_info:
 //  b_info (sz_unc, sz_cpr, method) of folded code (C-language, etc.)
 
