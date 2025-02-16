@@ -61,7 +61,7 @@ protected:
 
     virtual unsigned pack2_shlib_overlay_init(OutputFile *fo);
     virtual unsigned pack2_shlib_overlay_compress(MemBuffer &obuf,
-        MemBuffer &ibuf, unsigned u_len);
+        upx_byte const *inp, unsigned u_len);
     virtual unsigned pack2_shlib_overlay_write(OutputFile *fo, MemBuffer &obuf,
         unsigned hdr_u_len, unsigned hdr_c_len);
 

@@ -485,6 +485,7 @@ unsigned PackUnix::unpackExtent(unsigned wanted, OutputFile *fo,
         fi->readx(&hdr, szb_info);
         int const sz_unc = ph.u_len = get_te32(&hdr.sz_unc);
         int const sz_cpr = ph.c_len = get_te32(&hdr.sz_cpr);
+        ph.method = hdr.b_method;
         ph.filter_cto = hdr.b_cto8;
 
         if (sz_unc == 0 || M_LZMA < hdr.b_method) {
@@ -657,6 +658,7 @@ void PackUnix::unpack(OutputFile *fo)
         fi->readx(&bhdr, szb_info);
         ph.u_len = sz_unc = get_te32(&bhdr.sz_unc);
         ph.c_len = sz_cpr = get_te32(&bhdr.sz_cpr);
+        ph.method = bhdr.b_method;
 
         if (sz_unc == 0)                   // uncompressed size 0 -> EOF
         {
