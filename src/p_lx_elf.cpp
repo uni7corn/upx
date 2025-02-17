@@ -7606,6 +7606,8 @@ void PackLinuxElf64::unpack(OutputFile *fo)
     unsigned orig_file_size = get_te32(&hbuf.p_filesize);
     blocksize = get_te32(&hbuf.p_blocksize);
     if ((u32_t)file_size > orig_file_size || blocksize > orig_file_size
+        || (orig_file_size >> 8) > (u32_t)file_size  // heuristic anti-fuzz
+        ||      (blocksize >> 8) > (u32_t)file_size
         || !mem_size_valid(1, blocksize, OVERHEAD))
         throwCantUnpack("p_info corrupted");
 
@@ -8831,6 +8833,8 @@ void PackLinuxElf32::unpack(OutputFile *fo)
     unsigned orig_file_size = get_te32(&hbuf.p_filesize);
     blocksize = get_te32(&hbuf.p_blocksize);
     if ((u32_t)file_size > orig_file_size || blocksize > orig_file_size
+        || (orig_file_size >> 8) > (u32_t)file_size  // heuristic anti-fuzz
+        ||      (blocksize >> 8) > (u32_t)file_size
         || !mem_size_valid(1, blocksize, OVERHEAD))
         throwCantUnpack("p_info corrupted");
 
