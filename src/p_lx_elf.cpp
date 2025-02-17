@@ -2427,11 +2427,15 @@ PackLinuxElf32::invert_pt_dynamic(Elf32_Dyn const *dynp, u32_t headway)
     if (v_gsh && file_image) {
         // Not similar to DT_HASH because DT_GNU_HASH is not small (0x6ffffef5).
         gashtab = (unsigned const *)elf_find_dynamic(Elf32_Dyn::DT_GNU_HASH);
-        if (!gashtab) {
-            throwCantPack("bad DT_GNU_HASH %#x", v_gsh);
-        }
         gashend = (unsigned const *)(void const *)(elf_find_table_size(
             Elf32_Dyn::DT_GNU_HASH, Elf32_Shdr::SHT_GNU_HASH) + (char const *)gashtab);
+        if (!gashtab || (char const *)gashend <= (char const *)&gashtab[4]
+        ||  file_image.getSizeInBytes()
+            < ((char const *)&gashtab[4] - (char *)&file_image[0]) )
+        {
+            throwCantPack("bad DT_GNU_HASH %#x", v_gsh);
+        }
+
         unsigned const n_bucket = get_te32(&gashtab[0]);
         unsigned const symbias  = get_te32(&gashtab[1]);
         unsigned const n_bitmask = get_te32(&gashtab[2]);
@@ -8488,11 +8492,15 @@ PackLinuxElf64::invert_pt_dynamic(Elf64_Dyn const *dynp, upx_uint64_t headway)
     if (v_gsh && file_image) {
         // Not similar to DT_HASH because DT_GNU_HASH is not small (0x6ffffef5).
         gashtab = (unsigned const *)elf_find_dynamic(Elf64_Dyn::DT_GNU_HASH);
-        if (!gashtab) {
-            throwCantPack("bad DT_GNU_HASH %#x", v_gsh);
-        }
         gashend = (unsigned const *)(void const *)(elf_find_table_size(
             Elf64_Dyn::DT_GNU_HASH, Elf64_Shdr::SHT_GNU_HASH) + (char const *)gashtab);
+        if (!gashtab || (char const *)gashend <= (char const *)&gashtab[4]
+        ||  file_image.getSizeInBytes()
+            < ((char const *)&gashtab[4] - (char *)&file_image[0]) )
+        {
+            throwCantPack("bad DT_GNU_HASH %#x", v_gsh);
+        }
+
         unsigned const n_bucket = get_te32(&gashtab[0]);
         unsigned const symbias  = get_te32(&gashtab[1]);
         unsigned const n_bitmask = get_te32(&gashtab[2]);
