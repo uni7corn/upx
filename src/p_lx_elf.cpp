@@ -2431,7 +2431,7 @@ PackLinuxElf32::invert_pt_dynamic(Elf32_Dyn const *dynp, u32_t headway)
             Elf32_Dyn::DT_GNU_HASH, Elf32_Shdr::SHT_GNU_HASH) + (char const *)gashtab);
         if (!gashtab || (char const *)gashend <= (char const *)&gashtab[4]
         ||  file_image.getSizeInBytes()
-            < ((char const *)&gashtab[4] - (char *)&file_image[0]) )
+            < (unsigned)((char const *)&gashtab[4] - (char *)&file_image[0]) )
         {
             throwCantPack("bad DT_GNU_HASH %#x", v_gsh);
         }
@@ -8496,7 +8496,7 @@ PackLinuxElf64::invert_pt_dynamic(Elf64_Dyn const *dynp, upx_uint64_t headway)
             Elf64_Dyn::DT_GNU_HASH, Elf64_Shdr::SHT_GNU_HASH) + (char const *)gashtab);
         if (!gashtab || (char const *)gashend <= (char const *)&gashtab[4]
         ||  file_image.getSizeInBytes()
-            < ((char const *)&gashtab[4] - (char *)&file_image[0]) )
+            < (unsigned)((char const *)&gashtab[4] - (char *)&file_image[0]) )
         {
             throwCantPack("bad DT_GNU_HASH %#x", v_gsh);
         }
