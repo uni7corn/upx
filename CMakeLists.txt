@@ -369,6 +369,7 @@ endif()
 upx_add_target_extra_compile_options(${t} UPX_CONFIG_EXTRA_COMPILE_OPTIONS_UCL)
 
 set(t upx_vendor_zlib)
+target_include_directories(${t} PRIVATE vendor/zlib)
 upx_compile_target_debug_with_O2(${t})
 upx_sanitize_target(${t})
 target_compile_definitions(${t} PRIVATE HAVE_VSNPRINTF=1)

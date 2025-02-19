@@ -19,8 +19,8 @@ env:
   UPX_DEBUG_TEST_FLOAT_DIVISION_BY_ZERO: 1
   UPX_DEBUG_TEST_LIBC_QSORT: 1
   ZSTD_CLEVEL: 9
-  # 2025-01-29
-  ZIG_DIST_VERSION: 0.14.0-dev.2987+183bb8b08
+  # 2025-02-18
+  ZIG_DIST_VERSION: 0.14.0-dev.3258+d2e70ef84
 
 jobs:
   job-rebuild-and-verify-stubs:
@@ -425,7 +425,8 @@ jobs:
           %RUN_LIB% -out:ucl.lib *.obj
           @REM ===== build zlib =====
           cd %BDIR%\zlib
-          %RUN_CL% -J -O2 -W3 -WX %DEFS% -DHAVE_VSNPRINTF -c %H%\vendor\zlib\*.c
+          set s=%H%\vendor\zlib
+          %RUN_CL% -J -O2 -W3 -WX %DEFS% -I%s% -DHAVE_VSNPRINTF -c %H%\vendor\zlib\*.c
           %RUN_LIB% -out:zlib.lib *.obj
           @REM ===== build zstd =====
           cd %BDIR%\zstd
