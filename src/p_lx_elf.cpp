@@ -4300,7 +4300,7 @@ void PackLinuxElf32::pack1(OutputFile * /*fo*/, Filter &ft)
                         fi->readx(ibuf, filesz);
                         ft = orig_ft;
                         ph = orig_ph;
-                        ph.method = ph_force_method(methods[k]);
+                        ph.set_method(ph_force_method(methods[k]), offset);
                         ph.u_len = filesz;
                         compressWithFilters(&ft, OVERHEAD, NULL_cconf, 10, true);
                         sz_this += ph.c_len;
@@ -4313,7 +4313,7 @@ void PackLinuxElf32::pack1(OutputFile * /*fo*/, Filter &ft)
                 fi->readx(ibuf, sz_tail);
                 ft = orig_ft;
                 ph = orig_ph;
-                ph.method = ph_force_method(methods[k]);
+                ph.set_method(ph_force_method(methods[k]));
                 ph.u_len = sz_tail;
                 compressWithFilters(&ft, OVERHEAD, NULL_cconf, 10, true);
                 sz_this += ph.c_len;
@@ -4326,7 +4326,7 @@ void PackLinuxElf32::pack1(OutputFile * /*fo*/, Filter &ft)
         }
         ft = orig_ft;
         ph = orig_ph;
-        ph.method = ph_force_method(method_best);
+        ph.set_method(ph_force_method(method_best));
     }
 
     Elf32_Phdr *phdr = phdri;
@@ -5152,7 +5152,7 @@ void PackLinuxElf64::pack1(OutputFile * /*fo*/, Filter &ft)
                         fi->readx(ibuf, filesz);
                         ft = orig_ft;
                         ph = orig_ph;
-                        ph.method = ph_force_method(methods[k]);
+                        ph.set_method(ph_force_method(methods[k]));
                         ph.u_len = filesz;
                         compressWithFilters(&ft, OVERHEAD, NULL_cconf, 10, true);
                         sz_this += ph.c_len;
@@ -5165,7 +5165,7 @@ void PackLinuxElf64::pack1(OutputFile * /*fo*/, Filter &ft)
                 fi->readx(ibuf, sz_tail);
                 ft = orig_ft;
                 ph = orig_ph;
-                ph.method = ph_force_method(methods[k]);
+                ph.set_method(ph_force_method(methods[k]));
                 ph.u_len = sz_tail;
                 compressWithFilters(&ft, OVERHEAD, NULL_cconf, 10, true);
                 sz_this += ph.c_len;
@@ -5178,7 +5178,7 @@ void PackLinuxElf64::pack1(OutputFile * /*fo*/, Filter &ft)
         }
         ft = orig_ft;
         ph = orig_ph;
-        ph.method = ph_force_method(method_best);
+        ph.set_method(ph_force_method(method_best));
     }
 
     Elf64_Phdr *phdr = phdri;
@@ -7620,7 +7620,7 @@ void PackLinuxElf64::unpack(OutputFile *fo)
     fi->readx(&bhdr, szb_info);
     ph.u_len = get_te32(&bhdr.sz_unc);
     ph.c_len = get_te32(&bhdr.sz_cpr);
-    ph.method = bhdr.b_method;
+    ph.set_method(bhdr.b_method, overlay_offset + sizeof(p_info));
     if (ph.c_len > file_size_u || ph.c_len == 0 || ph.u_len == 0
     ||  ph.u_len > orig_file_size)
         throwCantUnpack("b_info corrupted");
@@ -7665,11 +7665,11 @@ void PackLinuxElf64::unpack(OutputFile *fo)
             unsigned b_method = ibuf[0];
             unsigned b_extra  = ibuf[3];
             if (M_ZSTD >= b_method && 0 == b_extra) {
-                fi->seek( -(upx_off_t)(ph.c_len + szb_info), SEEK_CUR);
+                unsigned where = fi->seek( -(upx_off_t)(ph.c_len + szb_info), SEEK_CUR);
                 szb_info = 12;
                 fi->readx(&bhdr, szb_info);
                 ph.filter_cto = bhdr.b_cto8;
-                ph.method = bhdr.b_method;
+                ph.set_method(bhdr.b_method, where);
                 prev_method = bhdr.b_method;  // FIXME if multiple de-compressors
                 fi->readx(ibuf, ph.c_len);
             }
@@ -7867,7 +7867,7 @@ void PackLinuxElf64::unpack(OutputFile *fo)
 
     // check for end-of-file
     fi->readx(&bhdr, szb_info);
-    ph.method = bhdr.b_method;
+    ph.set_method(bhdr.b_method, ~0u);
     unsigned const sz_unc = ph.u_len = get_te32(&bhdr.sz_unc);
 
     if (sz_unc == 0) { // uncompressed size 0 -> EOF
@@ -8851,7 +8851,7 @@ void PackLinuxElf32::unpack(OutputFile *fo)
     fi->readx(&bhdr, szb_info);
     ph.u_len = get_te32(&bhdr.sz_unc);
     ph.c_len = get_te32(&bhdr.sz_cpr);
-    ph.method = bhdr.b_method;
+    ph.set_method(bhdr.b_method, overlay_offset + sizeof(p_info));
     if (ph.c_len > (unsigned)file_size || ph.c_len == 0 || ph.u_len == 0
     ||  ph.u_len > orig_file_size)
         throwCantUnpack("b_info corrupted");
@@ -9076,7 +9076,7 @@ void PackLinuxElf32::unpack(OutputFile *fo)
 
     // check for end-of-file
     fi->readx(&bhdr, szb_info);
-    ph.method = bhdr.b_method;
+    ph.set_method(bhdr.b_method, ~0u);
     unsigned const sz_unc = ph.u_len = get_te32(&bhdr.sz_unc);
 
     if (sz_unc == 0) { // uncompressed size 0 -> EOF

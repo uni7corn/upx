@@ -45,6 +45,13 @@ void PackHeader::reset() noexcept {
     compress_result.reset();
 }
 
+int PackHeader::set_method(int m, unsigned offset) {
+    unsigned mc = ~(0x80u << 24) & m; // see ph_forced_method
+    if ((mc < M_NRV2B_LE32 || M_LZMA < mc) && ~0u != offset)
+        throwCantPack("bad method %#x at %#x", (unsigned) m, offset);
+    return method = m;
+}
+
 /*************************************************************************
 // extremely simple checksum for the header itself (since version 10)
 **************************************************************************/
