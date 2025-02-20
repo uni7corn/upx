@@ -2,7 +2,7 @@
 User visible changes for UPX
 ==================================================================
 
-Changes in 5.0.0 (XX XXX XXXX):
+Changes in 5.0.0 (20 Feb 2025):
   * ELF: use of memfd_create supports Enforcing mode of SELinux
   * ELF: two-step de-compression enables future per-PT_LOAD work
   * ELF: --unmap-all-pages completely avoids /proc/self/exe
