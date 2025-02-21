@@ -7674,6 +7674,8 @@ void PackLinuxElf64::unpack(OutputFile *fo)
                 fi->readx(ibuf, ph.c_len);
             }
         }
+        if (ph.u_len < sizeof(*ehdr))
+            throwCantUnpack("ElfXX_Ehdr corrupted");
         decompress(ibuf, (upx_byte *)ehdr, false);
         if (ehdr->e_type   !=ehdri.e_type
         ||  ehdr->e_machine!=ehdri.e_machine
@@ -8885,6 +8887,8 @@ void PackLinuxElf32::unpack(OutputFile *fo)
         if (ibuf.getSize() < ph.c_len)
             throwCompressedDataViolation();
         fi->readx(ibuf, ph.c_len);
+        if (ph.u_len < sizeof(*ehdr))
+            throwCantUnpack("ElfXX_Ehdr corrupted");
         decompress(ibuf, (upx_byte *)ehdr, false);
         if (ehdr->e_type   !=ehdri.e_type
         ||  ehdr->e_machine!=ehdri.e_machine
