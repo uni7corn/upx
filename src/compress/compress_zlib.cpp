@@ -2,7 +2,7 @@
 
    This file is part of the UPX executable compressor.
 
-   Copyright (C) 1996-2024 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2025 Markus Franz Xaver Johannes Oberhumer
    All Rights Reserved.
 
    UPX and the UCL library are free software; you can redistribute them
@@ -97,9 +97,9 @@ int upx_zlib_compress(const upx_bytep src, unsigned src_len, upx_bytep dst, unsi
     zlib_compress_config_t::strategy_t strategy;
     // cconf overrides
     if (lcconf) {
-        oassign(mem_level, lcconf->mem_level);
-        oassign(window_bits, lcconf->window_bits);
-        oassign(strategy, lcconf->strategy);
+        upx::oassign(mem_level, lcconf->mem_level);
+        upx::oassign(window_bits, lcconf->window_bits);
+        upx::oassign(strategy, lcconf->strategy);
     }
 
     z_stream s;
