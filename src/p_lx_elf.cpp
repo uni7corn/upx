@@ -2394,6 +2394,12 @@ PackLinuxElf32::invert_pt_dynamic(Elf32_Dyn const *dynp, u32_t headway)
         // Find end of DT_HASH
         hashend = (unsigned const *)(void const *)(elf_find_table_size(
             Elf32_Dyn::DT_HASH, Elf32_Shdr::SHT_HASH) + (char const *)hashtab);
+        if (!hashtab || (char const *)hashend <= (char const *)&hashtab[2]
+        ||  file_image.getSizeInBytes()
+            < (unsigned)((char const *)&hashtab[2] - (char *)&file_image[0]) )
+        {
+            throwCantPack("bad DT_HASH %#x", v_hsh);
+        }
 
         unsigned const nbucket = get_te32(&hashtab[0]);
         unsigned const *const buckets = &hashtab[2];
@@ -8461,6 +8467,12 @@ PackLinuxElf64::invert_pt_dynamic(Elf64_Dyn const *dynp, upx_uint64_t headway)
         // Find end of DT_HASH
         hashend = (unsigned const *)(void const *)(elf_find_table_size(
             Elf64_Dyn::DT_HASH, Elf64_Shdr::SHT_HASH) + (char const *)hashtab);
+        if (!hashtab || (char const *)hashend <= (char const *)&hashtab[2]
+        ||  file_image.getSizeInBytes()
+            < (unsigned)((char const *)&hashtab[2] - (char *)&file_image[0]) )
+        {
+            throwCantPack("bad DT_HASH %#x", v_hsh);
+        }
 
         unsigned const nbucket = get_te32(&hashtab[0]);
         unsigned const *const buckets = &hashtab[2];
