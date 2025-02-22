@@ -158,8 +158,8 @@ static_assert(8 * sizeof(int) == __INT_WIDTH__, "");
 #if defined(__LONG_WIDTH__)
 static_assert(8 * sizeof(long) == __LONG_WIDTH__, "");
 #endif
-#if defined(__LONG_LONG_WIDTH__)
-static_assert(8 * sizeof(long long) == __LONG_LONG_WIDTH__, "");
+#if defined(__LLONG_WIDTH__)
+static_assert(8 * sizeof(long long) == __LLONG_WIDTH__, "");
 #endif
 #if defined(__INTMAX_WIDTH__)
 static_assert(8 * sizeof(intmax_t) == __INTMAX_WIDTH__, "");
@@ -253,19 +253,6 @@ ASSERT_COMPATIBLE_TYPE(uintptr_t, expected_uintptr_t); // some toolchains are bu
 #if defined(__PTRADDR_TYPE__)
 static_assert(std::is_unsigned<expected_ptraddr_t>::value, "");
 ASSERT_SAME_TYPE(upx_ptraddr_t, expected_ptraddr_t);
-#endif
-
-#if defined(__INTPTR_TYPE__) && defined(__UINTPTR_TYPE__)
-#if defined(__m68k__) && defined(__atarist__) && defined(__GNUC__)
-// BUG: compiler/mintlib mismatch: int vs long
-#elif (defined(__arm__) || defined(__mips__)) && defined(__linux__) && defined(__clang__) &&       \
-    (__SIZEOF_LONG__ == 4)
-// BUG: compiler/libc mismatch: int vs long
-// TODO later: check zig and clang for possible misconfiguration under 32-bit arm & mips
-#else
-ASSERT_SAME_TYPE(intptr_t, expected_intptr_t);
-ASSERT_SAME_TYPE(uintptr_t, expected_uintptr_t);
-#endif // BUG
 #endif
 
 // UPX types
