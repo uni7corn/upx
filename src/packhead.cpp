@@ -2,8 +2,8 @@
 
    This file is part of the UPX executable compressor.
 
-   Copyright (C) 1996-2024 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1996-2024 Laszlo Molnar
+   Copyright (C) 1996-2025 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2025 Laszlo Molnar
    All Rights Reserved.
 
    UPX and the UCL library are free software; you can redistribute them
@@ -43,6 +43,13 @@ void PackHeader::reset() noexcept {
     version = -1;
     format = -1;
     compress_result.reset();
+}
+
+int PackHeader::set_method(int m, unsigned offset) {
+    unsigned mc = ~(0x80u << 24) & m; // see ph_forced_method
+    if ((mc < M_NRV2B_LE32 || M_LZMA < mc) && ~0u != offset)
+        throwCantPack("bad method %#x at %#x", (unsigned) m, offset);
+    return method = m;
 }
 
 /*************************************************************************

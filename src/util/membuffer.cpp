@@ -2,8 +2,8 @@
 
    This file is part of the UPX executable compressor.
 
-   Copyright (C) 1996-2024 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1996-2024 Laszlo Molnar
+   Copyright (C) 1996-2025 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2025 Laszlo Molnar
    All Rights Reserved.
 
    UPX and the UCL library are free software; you can redistribute them
@@ -48,6 +48,8 @@ unsigned membuffer_get_size(MemBuffer &mb) noexcept { return mb.getSize(); }
 **************************************************************************/
 
 #if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_MEMORY__)
+static forceinline constexpr bool use_simple_mcheck() noexcept { return false; }
+#elif defined(__CHERI__) && defined(__CHERI_PURE_CAPABILITY__)
 static forceinline constexpr bool use_simple_mcheck() noexcept { return false; }
 #elif (WITH_VALGRIND) && defined(RUNNING_ON_VALGRIND)
 static bool use_simple_mcheck_flag;
@@ -146,7 +148,7 @@ void MemBuffer::fill(unsigned off, unsigned len, int value) {
 **************************************************************************/
 
 // for use_simple_mcheck()
-#define PTR_BITS32(p) ((unsigned) (ptr_get_address(p) & 0xffffffff))
+#define PTR_BITS32(p) ((upx_uint32_t) (ptr_get_address(p) & 0xffffffff))
 #define MAGIC1(p)     ((PTR_BITS32(p) ^ 0xfefdbeeb) | 1)
 #define MAGIC2(p)     ((PTR_BITS32(p) ^ 0xfefdbeeb ^ 0x88224411) | 1)
 
@@ -175,6 +177,8 @@ void MemBuffer::alloc(upx_uint64_t bytes) may_throw {
     size_t malloc_bytes = mem_size(1, bytes); // check size
     if (use_simple_mcheck())
         malloc_bytes += 32;
+    else
+        malloc_bytes += 4;
     byte *p = (byte *) ::malloc(malloc_bytes);
     NO_printf("MemBuffer::alloc %llu: %p\n", bytes, p);
     if (!p)
@@ -279,7 +283,7 @@ TEST_CASE("MemBuffer core") {
     CHECK_THROWS(mb.subref("", N, 1));
     if (use_simple_mcheck()) {
         byte *p = raw_bytes(mb, 0);
-        unsigned magic1 = get_ne32(p - 4);
+        upx_uint32_t magic1 = get_ne32(p - 4);
         set_ne32(p - 4, magic1 ^ 1);
         CHECK_THROWS(mb.checkState());
         set_ne32(p - 4, magic1);

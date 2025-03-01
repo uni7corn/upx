@@ -2,8 +2,8 @@
 
    This file is part of the UPX executable compressor.
 
-   Copyright (C) 1996-2024 Markus Franz Xaver Johannes Oberhumer
-   Copyright (C) 1996-2024 Laszlo Molnar
+   Copyright (C) 1996-2025 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2025 Laszlo Molnar
    All Rights Reserved.
 
    UPX and the UCL library are free software; you can redistribute them
@@ -63,6 +63,7 @@ struct PackHeader final {
         int n_mru;       // specific name for filter ctojr
     };
     int header_checksum;
+    int set_method(int m, unsigned offset = 0); // check, then assign
 
     // support fields for verifying decompression
     unsigned saved_u_adler;

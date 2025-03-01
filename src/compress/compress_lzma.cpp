@@ -2,7 +2,7 @@
 
    This file is part of the UPX executable compressor.
 
-   Copyright (C) 1996-2024 Markus Franz Xaver Johannes Oberhumer
+   Copyright (C) 1996-2025 Markus Franz Xaver Johannes Oberhumer
    All Rights Reserved.
 
    UPX and the UCL library are free software; you can redistribute them
@@ -127,11 +127,11 @@ static bool prepare_result(lzma_compress_result_t *res, unsigned src_len, int me
 
     // cconf overrides
     if (lcconf) {
-        oassign(res->pos_bits, lcconf->pos_bits);
-        oassign(res->lit_pos_bits, lcconf->lit_pos_bits);
-        oassign(res->lit_context_bits, lcconf->lit_context_bits);
-        oassign(res->dict_size, lcconf->dict_size);
-        oassign(res->num_fast_bytes, lcconf->num_fast_bytes);
+        upx::oassign(res->pos_bits, lcconf->pos_bits);
+        upx::oassign(res->lit_pos_bits, lcconf->lit_pos_bits);
+        upx::oassign(res->lit_context_bits, lcconf->lit_context_bits);
+        upx::oassign(res->dict_size, lcconf->dict_size);
+        upx::oassign(res->num_fast_bytes, lcconf->num_fast_bytes);
     }
 
     // limit dictionary size
